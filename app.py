@@ -7,13 +7,16 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
 # Load API key from .env file
-load_dotenv()
+if os.environ.get("RENDER") is None:
+    load_dotenv()
 
 # Create Claude client
-client = anthropic.Anthropic(
-    api_key=os.getenv("ANTHROPIC_API_KEY")
-)
+api_key = os.getenv("ANTHROPIC_API_KEY")
 
+if not api_key:
+    raise ValueError("❌ ANTHROPIC_API_KEY not found. Set it in environment variables.")
+
+client = anthropic.Anthropic(api_key=api_key)
 # ── PART 1: Prompt Builder (must be defined FIRST) ──────────────────────────
 def build_prompt(reviews, platform):
     base = f"""
@@ -107,5 +110,6 @@ def generate():
 
 # ── START SERVER ─────────────────────────────────────────────────────────────
 if __name__ == "__main__":
+    import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
